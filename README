@@ -1,0 +1,12 @@
+jQuery Particles is a simple function that takes an array of objects (or elements) and
+processes each item against a callback function. It is the duty of the callback function
+to handle the animation of the items, this library just helps in managine the processing
+task.
+
+@usage $.particles(items, function, [speed]) or $(some selector query).particles(function, [speed])
+
+@param items An array or object of items/elements to use
+@param function The name of a preset to use or a custom function. The scope is in reference to the current item. To end processing simply declare 'return' to break
+@param speed [Optional] Similar to jQuery.animate where you can pass the name of a speed or the milliseconds to delay
+
+@return returns the function with 'start' and 'stop' functions attached to control the processing. eg function.start() or function.stop()
