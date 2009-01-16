@@ -32,13 +32,16 @@
     function process() {
       var i = 0;
       if (length == undefined) {
-        for (name in object)
-          if (callback.apply(object[name], args) === false)
-            return false;
+        for (name in object) {
+          if (callback.apply(object[name], $.merge([i], args)) === false)
+            return kill();
+          // increment our own counter so we can keep track and let our callback know which index we're at
+          ++i;
+        }
       } else {
-        for ( var value = object[0]; i < length; value = object[++i] ) {
-          if (callback.apply(value, args) !== false)
-            return false;
+        for (var value = object[0]; i < length; value = object[++i] ) {
+          if (callback.apply(value, $.merge([i], args)) !== false)
+            return kill();
         }
       }
     }
@@ -53,14 +56,7 @@
     function run() {
       // doubt we need to run this but we will just incase
       kill();
-      interval = setTimeout(function() {
-        // run the process
-        if (process() === false) {
-          kill();
-          return;
-        }
-        run();
-      }, speed);
+      interval = setInterval(process, speed);
       threads[interval] = interval;
     }
     
