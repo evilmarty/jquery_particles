@@ -16,9 +16,53 @@
   // we store all our threads so we can stop and unload the resources when the user leaves the page
   var threads = {};
   
-  $.particles = function(object, callback, speed) {
-    var length = object.length, args = $.makeArray(arguments), interval = 0;
-    
+  function Particles(objects, callback, speed) {
+  	var args = $.makeArray(arguments);
+  	this._objects = objects;
+  	this._callback = callback;
+  	this.speed = (speed && speed.constructor == Number ? speed : jQuery.fx.speeds[speed]) || jQuery.fx.speeds.def;
+  	this._args = args[3].length !== undefined ? args[3] : args.slice(0, 3);
+  }
+  $.extend(Particles.prototype, {
+  	start: function() {
+  		var particles = this;
+  		this.stop();
+  		this._interval = setInterval(function() {
+  			particles._process();
+  		}, this.speed);
+  		threads[this._interval] = this;
+  		
+  		this.step = 1;
+  	},
+  	stop: function() {
+  		if (this._interval) {
+  			clearInterval(this._interval);
+  			this._interval = threads[this._interval] = undefined;
+  		}
+  	},
+  	_process: function() {
+  		var length = this._objects.length;
+  		this.index = 0;
+  		if (length == undefined) {
+		    for (name in this._objects) {
+		      if (this._callback.apply(this, $.merge([this._objects[name]], this._args)) === false)
+		        return this.stop();
+		      // increment our own counter so we can keep track and let our callback know which index we're at
+		      ++this.index;
+		    }
+		  } else {
+		    for (var value = this._objects[0]; this.index < length; value = this._objects[++this.index]) {
+		      if (this._callback.apply(this, $.merge([this._objects[this.index]], this._args)) === false)
+		        return this.stop();
+		    }
+		  }
+  		++this.step;
+  		this.index = undefined;
+  	}
+  });
+  
+  $.particles = function(object, callback, speed) {    
+  	var args = $.makeArray(arguments);
     // work out if the callback is a preset or a function
     if ((typeof callback == 'string' && !(callback = $.particles.presets[callback])) || !$.isFunction(callback)) {
       throw new Exception("Exception, expected particle preset or function but I don't know what I got");
@@ -26,48 +70,10 @@
     
     // any appended arguments should be passed to the callback
     args = args.slice(0, 3);
-    // work out the speed of the intervals
-    speed = (speed && speed.constructor == Number ? speed : jQuery.fx.speeds[speed]) || jQuery.fx.speeds.def;
     
-    function process() {
-      var i = 0;
-      if (length == undefined) {
-        for (name in object) {
-          if (callback.apply(object[name], $.merge([i], args)) === false)
-            return kill();
-          // increment our own counter so we can keep track and let our callback know which index we're at
-          ++i;
-        }
-      } else {
-        for (var value = object[0]; i < length; value = object[++i] ) {
-          if (callback.apply(value, $.merge([i], args)) !== false)
-            return kill();
-        }
-      }
-    }
-    
-    function kill() {
-      if (interval) {
-        clearInterval(interval);
-        interval = threads[interval] = undefined;
-      }
-    }
-    
-    function run() {
-      // doubt we need to run this but we will just incase
-      kill();
-      interval = setInterval(process, speed);
-      threads[interval] = interval;
-    }
-    
-    // assign the run and kill function to the callback and return it so the initiator can kill if need be;
-    callback.stop = kill;
-    callback.start = run;
-    
-    // run our little particle thread
-    run();
-    // return the callback with some enhancements so our initiator can have some control if need be
-    return callback;
+    var particles = new Particles(object, callback, speed, args);
+    particles.start();
+    return particles;
   }
   // Some particle presets which can be used
   $.particles.presets = {};
@@ -80,8 +86,8 @@
   
   // stop all threads when page unloads
   $(window).unload(function() {
-    $.each(threads, function(interval) {
-      clearInterval(interval);
+    $.each(threads, function(interval, particle) {
+      particle.stop();
     });
   })
 })(jQuery);

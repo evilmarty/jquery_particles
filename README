@@ -3,10 +3,20 @@ processes each item against a callback function. It is the duty of the callback 
 to handle the animation of the items, this library just helps in managine the processing
 task.
 
-@usage $.particles(items, function, [speed]) or $(some selector query).particles(function, [speed])
+@usage $.particles(items, function, [speed], [..]) or $(some selector query).particles(function, [speed], [..])
 
 @param items An array or object of items/elements to use
-@param function The name of a preset to use or a custom function. The scope is in reference to the current item. To end processing simply declare 'return' to break
+@param function The name of a preset to use or a custom function. The scope is in reference to the particle thread. The first argument is the current item and the rest of the arguments are the additional arguments passed to the $.particles function. To end processing simply declare 'return false' to break or just 'return' to continue. Much the same as jQuery's each function.
 @param speed [Optional] Similar to jQuery.animate where you can pass the name of a speed or the milliseconds to delay
+@param .. [Optional] Additional arguments which will be passed to the callback function. The first argument in the callback function is the item itself.
 
-@return returns the function with 'start' and 'stop' functions attached to control the processing. eg function.start() or function.stop()
+@return the particle thread which can control the state of the particles. This object holds information about the particle thread in general and when referenced in the callback function has a few properties to help.
+
+Thread object
+{
+	start: A function to start the thread again if stopped or restart if running.
+	stop: A function to stop the thread, which can be resumed later on.
+	*step: A property of the current step of the thread.
+	*index: A property of the current item index being passed to the callback function.
+}
+* denotes only available in the context of the callback function, not guaranteed outside of it.
