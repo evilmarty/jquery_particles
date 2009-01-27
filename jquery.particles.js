@@ -128,11 +128,11 @@
             height = $(item).height(),
             angle = options.startAngle + options.spacing * this.index,
             radius = options.radius == null ? Math.sqrt(width * width + height * height) / 2 : options.radius,
-            cx = Math.round($(item).parent().width() / 2),
-            cy = Math.round($(item).parent().height() / 2),
+            cx = $(item).parent().width() / 2,
+            cy = $(item).parent().height() / 2,
             x = cx + radius * Math.cos(angle * halfpi),
             y = cy + radius * Math.sin(angle * halfpi);
-        $(item).css({left: x + 'px', top: y + 'px'});
+        $(item).css({left: Math.round(x) + 'px', top: Math.round(y) + 'px'});
       }
     }
   };
