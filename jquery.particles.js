@@ -74,14 +74,11 @@
   });
   
   $.particles = function(object, callback, speed) {    
-  	var args = $.makeArray(arguments);
+  	var args = $.makeArray(arguments).slice(3);
     // work out if the callback is a preset or a function
-    if ((typeof callback == 'string' && !($.particles.presets[callback] && (callback = $.particles.presets[callback]($.merge([object], args))))) || !$.isFunction(callback)) {
+    if ((typeof callback == 'string' && !($.particles.presets[callback] && (callback = $.particles.presets[callback].apply(window, $.merge([object], args))))) || !$.isFunction(callback)) {
       throw new Exception("Exception, expected particle preset or function but I don't know what I got");
     }
-    
-    // any appended arguments should be passed to the callback
-    args = args.slice(0, 3);
     
     var particles = new Particles(object, callback, speed, args);
     particles.start();
@@ -89,9 +86,10 @@
   }
   
   $.fn.particles = function(callback, speed) {
+  	var args = $.merge([this], arguments);
     // make sure all elements are absolute, be silly otherwise and cause page chaos
     this.css('position', 'absolute');
-    return $.particles(this, callback, speed);
+    return $.particles.apply($, args);
   }
   
   // Some particle presets which can be used
@@ -103,11 +101,9 @@
         radius: null,
         spacing: null,
         startAngle: 0,
+        stepAmount: 3,
         direction: 1
       }, options || {});
-      
-      
-      if (options.spacing == null && objects.length) options.spacing = 360 / objects.length;
       
       // make sure we have correct direction
       switch (options.direction) {
@@ -117,7 +113,8 @@
         case -1:
         case false:
           options.direction = -1;
-        else
+          break;
+        default:
           options.direction = 1;
       }
       
@@ -126,12 +123,12 @@
         // width and height are used to help calculate the radius of the element (yes I know it's a square)
         var width = $(item).width(),
             height = $(item).height(),
-            angle = options.startAngle + options.spacing * this.index,
+            angle = options.startAngle + (options.spacing || 360 / this.length) * this.index + (this.step * options.stepAmount),
             radius = options.radius == null ? Math.sqrt(width * width + height * height) / 2 : options.radius,
             cx = $(item).parent().width() / 2,
             cy = $(item).parent().height() / 2,
-            x = cx + radius * Math.cos(angle * halfpi),
-            y = cy + radius * Math.sin(angle * halfpi);
+            x = cx + radius * Math.cos(angle * halfpi * options.direction),
+            y = cy + radius * Math.sin(angle * halfpi * options.direction);
         $(item).css({left: Math.round(x) + 'px', top: Math.round(y) + 'px'});
       }
     }
