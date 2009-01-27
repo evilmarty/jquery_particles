@@ -64,7 +64,7 @@
   $.particles = function(object, callback, speed) {    
   	var args = $.makeArray(arguments);
     // work out if the callback is a preset or a function
-    if ((typeof callback == 'string' && !(callback = $.particles.presets[callback])) || !$.isFunction(callback)) {
+    if ((typeof callback == 'string' && !($.particles.presets[callback] && (callback = $.particles.presets[callback]($.merge([object], args))))) || !$.isFunction(callback)) {
       throw new Exception("Exception, expected particle preset or function but I don't know what I got");
     }
     
@@ -75,14 +75,55 @@
     particles.start();
     return particles;
   }
-  // Some particle presets which can be used
-  $.particles.presets = {};
   
   $.fn.particles = function(callback, speed) {
     // make sure all elements are absolute, be silly otherwise and cause page chaos
     this.css('position', 'absolute');
     return $.particles(this, callback, speed);
   }
+  
+  // Some particle presets which can be used
+  $.particles.presets = {
+    // Rotate particles in a circular motion
+    'circular': function(objects, options) {
+      var halfpi = Math.PI / 180;
+      options = $.extend({
+        radius: null,
+        spacing: null,
+        startAngle: 0,
+        direction: 1
+      }, options || {});
+      
+      
+      if (options.spacing == null && objects.length) options.spacing = 360 / objects.length;
+      
+      // make sure we have correct direction
+      switch (options.direction) {
+        case 'counterclockwise':
+        case 'counter':
+        case 'reverse':
+        case -1:
+        case false:
+          options.direction = -1;
+        else
+          options.direction = 1;
+      }
+      
+      // Even though the options will be passed as the second parameter, we want to use the modified one we were given upon initialisation. We've done a few changes etc and like to keep them.
+      return function(item) {
+        // width and height are used to help calculate the radius of the element (yes I know it's a square)
+        var width = $(item).width(),
+            height = $(item).height(),
+            angle = options.startAngle + options.spacing * this.index,
+            radius = options.radius == null ? Math.sqrt(width * width + height * height) / 2 : options.radius,
+            cx = Math.round($(item).parent().width() / 2),
+            cy = Math.round($(item).parent().height() / 2),
+            x = cx + radius * Math.cos(angle * halfpi),
+            y = cy + radius * Math.sin(angle * halfpi);
+        $(item).css({left: x + 'px', top: y + 'px'});
+      }
+    }
+  };
   
   // stop all threads when page unloads
   $(window).unload(function() {
