@@ -22,8 +22,20 @@
   	this._callback = callback;
   	this.speed = (speed && speed.constructor == Number ? speed : jQuery.fx.speeds[speed]) || jQuery.fx.speeds.def;
   	this._args = args[3].length !== undefined ? args[3] : args.slice(0, 3);
+  	// cache the length to save on performance
+  	this.length = this._length();
   }
   $.extend(Particles.prototype, {
+    _length: function() {
+      if (this._objects.length == undefined) {
+        var length = 0;
+        $.each(this._objects, function() { ++length; });
+        return length;
+      }
+      else {
+        return this._objects.length;
+      }
+    },
   	start: function() {
   		var particles = this;
   		this.stop();
