@@ -1,0 +1,33 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>jQuery Particles Test Bed</title>
+    <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+    <script type="text/javascript" src="jquery.particles.js"></script>
+    <script type="text/javascript">
+    $(document).ready(function() {
+      $('#container > span').particles('flies');
+    });
+    </script>
+    <style type="text/css">
+    #container { border: 1px solid #333; width: 640px; height: 480px;}
+    #container span { background: blue; display: block; width: 10px; height: 10px; -moz-border-radius: 5px; -webkit-border-radius: 5px;}
+    </style>
+  </head>
+  <body>
+    <h1>jQuery Particles Test Bed</h1>
+    <div id="container">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </body>
+</html>

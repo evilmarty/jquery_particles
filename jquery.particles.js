@@ -96,9 +96,9 @@
   $.particles.presets = {
     // Rotate particles in a circular motion
     'circular': function(objects, options) {
-      var halfpi = Math.PI / 180;
+      var halfpi = Math.PI / 180, parent = objects.parent();
       options = $.extend({
-        radius: null,
+        radius: (Math.sqrt(parent.width() * parent.width() + parent.height() * parent.height()) / (parent.width() / parent.height())) / 2,
         spacing: null,
         startAngle: 0,
         stepAmount: 3,
@@ -130,6 +130,53 @@
             x = cx + radius * Math.cos(angle * halfpi * options.direction),
             y = cy + radius * Math.sin(angle * halfpi * options.direction);
         $(item).css({left: Math.round(x) + 'px', top: Math.round(y) + 'px'});
+      }
+    },
+    'flies': function(objects, options) {
+      var parent = objects.parent().css('position', 'relative'), width = parent.width(), height = parent.height();
+      
+      options = $.extend(options, {
+        decisiveness: 0.95,
+        acceleration: 10,
+        speed: 10
+      });
+      
+      function randomPoint(w, h, width, height) {
+        return [Math.round((Math.random() * width - (w * 2)) + w), Math.round((Math.random() * height - (h * 2)) + h)];
+      }
+      
+      $.each(objects, function() {
+        var position = randomPoint(width, height);
+        $(this)
+          .css({position: 'absolute', left: position[0], top: position[1]})
+          .data('flies:dx', 0)
+          .data('flies:dy', 0)
+          .data('flies:destination', randomPoint($(this).width(), $(this).height(), width, height));
+      });
+      
+      return function(fly) {
+        var destination = $(fly).data('flies:destination'),
+          left = parseInt($(fly).css('left')),
+          top = parseInt($(fly).css('top')),
+          x = destination[0] - left,
+          y = destination[1] - top,
+          len = Math.sqrt(x * x + y * y) + .1, // just ensuring we don't have a zero
+          dx = options.speed * (x / len),
+          dy = options.speed * (y / len),
+          _dx = $(fly).data('flies:dx'),
+          _dy = $(fly).data('flies:dy'),
+          ddx = (dx - _dx) / options.acceleration,
+          ddy = (dy - _dy) / options.acceleration;
+        dx = isNaN(_dx) ? 0 : _dx + ddx;
+        dy = isNaN(_dy) ? 0 : _dy + ddy;
+        $(fly)
+          .css({left: left + dx, top: top + dy})
+          .data('flies:dx', dx)
+          .data('flies:dy', dy);
+
+        if (Math.random() > options.decisiveness) {
+          $(fly).data('flies:destination', randomPoint($(fly).width(), $(fly).height(), width, height));
+        }
       }
     }
   };
